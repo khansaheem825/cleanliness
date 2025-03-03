@@ -1,0 +1,61 @@
+import tensorflow as tf
+import numpy as np
+import os
+from tensorflow.keras.preprocessing import image
+import matplotlib.pyplot as plt
+
+model_path = "cleanliness_model.h5"
+model = tf.keras.models.load_model(model_path)
+
+class_labels = ['Moderate', 'Partially Clean', 'Fully Clean']
+
+def predict_image(img_path):
+    try:
+        img = image.load_img(img_path, target_size=(224, 224))
+    except Exception as e:
+        print(f"Error loading image: {e}")
+        return
+
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array /= 255.0
+
+
+
+    predictions = model.predict(img_array)
+    predicted_class = np.argmax(predictions)
+    confidence = np.max(predictions)
+
+    if predicted_class >= len(class_labels):
+        print("Predicted class is out of range!")
+        return
+
+    plt.imshow(img)
+    plt.axis('off')
+    plt.title(f"Prediction: {class_labels[predicted_class]} (Confidence: {confidence * 100:.2f}%)")
+    plt.show()
+
+    for i, label in enumerate(class_labels):
+        print(f"{label}: {predictions[0][i] * 100:.2f}%")
+
+
+def test_images_in_folder(folder_path):
+    test_images = [f for f in os.listdir(folder_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
+
+    if not test_images:
+        print("No images found in the folder!")
+        return
+
+    for img_name in test_images:
+        img_path = os.path.join(folder_path, img_name)
+        print(f"\nTesting image: {img_name}")
+        predict_image(img_path)
+
+
+test_image_path = "C:/Users/khans/PycharmProjects/cleanliness/cleanliness_dataset/test_image/test_image4.jpg"
+predict_image(test_image_path)
+
+test_folder_path = "C:/Users/khans/PycharmProjects/cleanliness/cleanliness_dataset/test_image"
+test_images_in_folder(test_folder_path)
+
+
